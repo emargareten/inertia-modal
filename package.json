@@ -1,0 +1,38 @@
+{
+    "name": "inertia-modal",
+    "version": "0.0.1",
+    "description": "Implement backend-driven modal dialogs for Inertia apps.",
+    "keywords": [
+        "laravel",
+        "inertia",
+        "modal"
+    ],
+    "homepage": "https://github.com/emargareten/inertia-modal",
+    "bugs": "https://github.com/emargareten/inertia-modal/issues",
+    "license": "MIT",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "source": "./js/index.js",
+    "module": "./dist/inertia-modal.js",
+    "main": "./dist/inertia-modal.umd.js",
+    "exports": {
+        ".": {
+            "import": "./dist/inertia-modal.js",
+            "require": "./dist/inertia-modal.umd.js"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/emargareten/inertia-modal.git"
+    },
+    "peerDependencies": {
+        "@inertiajs/vue3": "^1.0.0",
+        "axios": "^1.2.3",
+        "vue": "^3.2.45"
+    },
+    "devDependencies": {
+        "rollup": "^3.10.0"
+    }
+}

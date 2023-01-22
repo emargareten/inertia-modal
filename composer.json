@@ -1,0 +1,58 @@
+{
+    "name": "emargareten/inertia-modal",
+    "description": "Inertia Modal is a Laravel package that lets you implement backend-driven modal dialogs for Inertia apps.",
+    "keywords": [
+        "laravel",
+        "inertia",
+        "modal"
+    ],
+    "homepage": "https://github.com/emargareten/inertia-modal",
+    "license": "MIT",
+    "require": {
+        "php": "^8.0|^8.1|^8.2",
+        "illuminate/support": "^8.24|^9.0",
+        "inertiajs/inertia-laravel": "^0.6.9"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.4",
+        "nunomaduro/collision": "^6.4",
+        "nunomaduro/larastan": "^2.4",
+        "orchestra/testbench": "^7.19",
+        "pestphp/pest": "^1.22",
+        "pestphp/pest-plugin-laravel": "^1.4",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Emargareten\\InertiaModal\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Emargareten\\InertiaModal\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Emargareten\\InertiaModal\\InertiaModalServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
