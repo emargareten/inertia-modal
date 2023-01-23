@@ -56,13 +56,14 @@ const resolveComponent = () => {
 resolveComponent()
 
 watch(
-  () => modal.value,
+  modal,
   () => {
       resolveComponent()
   },
   { deep: true }
 )
-watch(() => key.value, setHeaders)
+
+watch(key, setHeaders)
 
 const redirect = () => {
   const redirectURL = modal.value?.redirectURL ?? modal.value?.baseURL
