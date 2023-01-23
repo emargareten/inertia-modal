@@ -38,8 +38,7 @@
     },
   };
 
-  const response = vue.computed(() => vue3.usePage().props);
-  const modal = vue.computed(() => response.value?.modal);
+  const modal = vue.computed(() => vue3.usePage().props?.modal);
   const props = vue.computed(() => modal.value?.props);
   const key = vue.computed(() => modal.value?.key);
 
@@ -88,16 +87,12 @@
     vue.nextTick(() => (show.value = true));
   };
 
-  resolveComponent();
+  vue.watch(modal, resolveComponent, {
+      deep: true,
+      immediate: true,
+  });
 
-  vue.watch(
-    () => modal.value,
-    () => {
-        resolveComponent();
-    },
-    { deep: true }
-  );
-  vue.watch(() => key.value, setHeaders);
+  vue.watch(key, setHeaders);
 
   const redirect = () => {
     const redirectURL = modal.value?.redirectURL ?? modal.value?.baseURL;

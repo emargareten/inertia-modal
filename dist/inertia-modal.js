@@ -36,8 +36,7 @@ const plugin = {
   },
 };
 
-const response = computed(() => usePage().props);
-const modal = computed(() => response.value?.modal);
+const modal = computed(() => usePage().props?.modal);
 const props = computed(() => modal.value?.props);
 const key = computed(() => modal.value?.key);
 
@@ -86,16 +85,12 @@ const resolveComponent = () => {
   nextTick(() => (show.value = true));
 };
 
-resolveComponent();
+watch(modal, resolveComponent, {
+    deep: true,
+    immediate: true,
+});
 
-watch(
-  () => modal.value,
-  () => {
-      resolveComponent();
-  },
-  { deep: true }
-);
-watch(() => key.value, setHeaders);
+watch(key, setHeaders);
 
 const redirect = () => {
   const redirectURL = modal.value?.redirectURL ?? modal.value?.baseURL;
