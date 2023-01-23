@@ -53,15 +53,10 @@ const resolveComponent = () => {
   nextTick(() => (show.value = true))
 }
 
-resolveComponent()
-
-watch(
-  modal,
-  () => {
-      resolveComponent()
-  },
-  { deep: true }
-)
+watch(modal, resolveComponent, {
+    deep: true,
+    immediate: true,
+})
 
 watch(key, setHeaders)
 
