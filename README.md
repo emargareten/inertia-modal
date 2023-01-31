@@ -24,7 +24,7 @@ composer require emargareten/inertia-modal
 > **Warning**
 > The package utilizes `axios` under the hood. If your app is already using `axios` as a dependency, make sure to lock it to the same version Inertia uses.
 > ```bash
-> npm i axios@1.0.0
+> npm i axios
 > ```
 
 ### `Modal` Component
