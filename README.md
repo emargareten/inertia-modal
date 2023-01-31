@@ -143,9 +143,43 @@ This will force re-render of the base route (or even redirect to a different bas
 
 Both of the above methods can also accept a boolean whether to refresh etc.
 
-### frontend implementation
+### Frontend implementation
 
-// ...
+Use the `useModal()` composable in your modal component.
+
+This example is a simple headlessui modal, you can add more transitions etc. see https://headlessui.com/vue/dialog.
+
+```vue
+<template>
+  <TransitionRoot appear as="template" :show="show">
+    <Dialog as="div" class="relative z-10" @close="close">
+      <TransitionChild @after-leave="redirect" as="template">
+        <div class="fixed inset-0 bg-black/75 transition-opacity" />
+      </TransitionChild>
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild as="template">
+            <DialogPanel class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                <slot name="title" />
+              </DialogTitle>
+              <slot />
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
+</template>
+
+<script setup>
+import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from "@headlessui/vue"
+import { useModal } from "vendor/emargareten/inertia-modal"
+
+const { show, close, redirect } = useModal()
+</script>
+```
 
 ## Testing
 
