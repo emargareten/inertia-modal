@@ -29,10 +29,10 @@
     },
     "peerDependencies": {
         "@inertiajs/vue3": "^1.0.0",
-        "axios": "^1.2.3",
+        "axios": "^1.2.0",
         "vue": "^3.2.45"
     },
     "devDependencies": {
-        "rollup": "^3.10.0"
+        "rollup": "^3.12.1"
     }
 }
