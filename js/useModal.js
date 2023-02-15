@@ -3,7 +3,7 @@ import { defineAsyncComponent, h, nextTick, watch, computed, ref, shallowRef } f
 import axios from 'axios'
 import resolver from './resolver'
 
-const modal = computed(() => usePage().props?.modal);
+const modal = computed(() => usePage()?.props?.modal);
 const props = computed(() => modal.value?.props)
 const key = computed(() => modal.value?.key)
 
