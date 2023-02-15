@@ -7,8 +7,10 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class Modal implements Responsable
 {
@@ -24,18 +26,9 @@ class Modal implements Responsable
     ) {
     }
 
-    public function baseRoute(string $name, mixed $parameters = [], bool $absolute = true): static
-    {
-        $this->baseURL = route($name, $parameters, $absolute);
-
-        return $this;
-    }
-
-    public function basePageRoute(string $name, mixed $parameters = [], bool $absolute = true): static
-    {
-        return $this->baseRoute($name, $parameters, $absolute);
-    }
-
+    /**
+     * Set the URL for the backdrop page.
+     */
     public function baseURL(string $url): static
     {
         $this->baseURL = $url;
@@ -44,7 +37,17 @@ class Modal implements Responsable
     }
 
     /**
-     * Force refreshing backdrop data
+     * Set the URL for the backdrop page using a route name.
+     */
+    public function baseRoute(string $name, mixed $parameters = [], bool $absolute = true): static
+    {
+        $this->baseURL = route($name, $parameters, $absolute);
+
+        return $this;
+    }
+
+    /**
+     * Force refreshing backdrop data.
      */
     public function refreshBackdrop($refresh = true): static
     {
@@ -54,7 +57,7 @@ class Modal implements Responsable
     }
 
     /**
-     * Ignore redirect header and force setting backdrop to new base URL
+     * Ignore redirect header and force setting backdrop to new base URL.
      */
     public function forceBase(bool $force = true): static
     {
@@ -63,6 +66,9 @@ class Modal implements Responsable
         return $this;
     }
 
+    /**
+     * Add props to the modal.
+     */
     public function with(array $props): static
     {
         $this->props = $props;
@@ -72,35 +78,16 @@ class Modal implements Responsable
 
     public function render(): mixed
     {
-        if (request()->inertia() && ! $this->refreshBackdrop) {
-            /*
-         * Here we will remove global sharing of auth etc. this way we don't need to fetch these
-         * data (the user doesn't even need to be authenticated). We don't care that the props
-         * are stale since it is only used for the backdrop. See preserveBackdrop.js
-         */
-            Inertia::flushShared();
-
-            /*
-             * Now we are going to share the modal and it's data as a prop. we also want
-             * the validation errors to be shared as well, we need to add it to the
-             * props here since we removed everything from the global share.
-             *
-             * We pass in an empty string for the component name, we are reusing
-             * the current component, see preserveBackdrop.js
-             */
-            return Inertia::render('', [
-                'modal' => $this->component(),
-                'errors' => (new \Inertia\Middleware())->resolveValidationErrors(request()),
-            ]);
+        if (request()->header('X-Inertia') && ! $this->refreshBackdrop) {
+            return $this->renderCurrentComponentWithModal();
         }
 
-        inertia()->share(['modal' => $this->component()]);
+        Inertia::share(['modal' => $this->component()]);
 
         if (request()->header('X-Inertia') && request()->header('X-Inertia-Partial-Component')) {
-            return inertia()->render(request()->header('X-Inertia-Partial-Component'));
+            return Inertia::render(request()->header('X-Inertia-Partial-Component'));
         }
 
-        /** @var Request $originalRequest */
         $originalRequest = app('request');
 
         $request = Request::create(
@@ -113,7 +100,6 @@ class Modal implements Responsable
             $originalRequest->getContent()
         );
 
-        /** @var \Illuminate\Routing\Router */
         $router = app('router');
 
         $baseRoute = $router->getRoutes()->match($request);
@@ -130,9 +116,31 @@ class Modal implements Responsable
         return $this->handleRoute($request, $baseRoute);
     }
 
+    /**
+     * Rerender the current component with the modal.
+     */
+    protected function renderCurrentComponentWithModal(): Response
+    {
+        $shared = Inertia::getShared();
+
+        Inertia::flushShared();
+
+        $excluded = app('config')->get('inertia-modal.exclude_shared_props', []);
+
+        Inertia::share(Arr::except($shared, $excluded));
+
+        /*
+         * We are returning the modal and it's data as a prop. We are also
+         * passing an empty string as the component name, since we are
+         * reusing the current component. (see preserveBackdrop.js)
+         */
+        return Inertia::render('', [
+            'modal' => $this->component(),
+        ]);
+    }
+
     protected function handleRoute(Request $request, Route $route): mixed
     {
-        /** @var \Illuminate\Routing\Router */
         $router = app('router');
 
         $middleware = new SubstituteBindings($router);
@@ -150,7 +158,7 @@ class Modal implements Responsable
             'baseURL' => $this->baseURL,
             'redirectURL' => $this->redirectURL(),
             'props' => $this->props,
-            'key' => request()->header('X-Inertia-Modal-Key', Str::uuid()->toString()),
+            'key' => request()->header('X-Inertia-Modal-Key', (string) Str::uuid()),
         ];
     }
 
