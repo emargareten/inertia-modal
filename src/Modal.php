@@ -155,7 +155,6 @@ class Modal implements Responsable
     {
         return [
             'component' => $this->component,
-            'baseURL' => $this->baseURL,
             'redirectURL' => $this->redirectURL(),
             'props' => $this->props,
             'key' => request()->header('X-Inertia-Modal-Key', (string) Str::uuid()),
@@ -172,10 +171,8 @@ class Modal implements Responsable
             return request()->header('X-Inertia-Modal-Redirect');
         }
 
-        $referer = request()->headers->get('referer');
-
-        if (request()->header('X-Inertia') && $referer && $referer != url()->current()) {
-            return $referer;
+        if (request()->header('X-Inertia') && request()->headers->get('referer')) {
+            return request()->headers->get('referer');
         }
 
         return $this->baseURL;

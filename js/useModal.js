@@ -60,7 +60,7 @@ watch(modal, resolveComponent, {
 watch(key, setHeaders)
 
 const redirect = () => {
-  const redirectURL = modal.value?.redirectURL ?? modal.value?.baseURL
+  const redirectURL = modal.value?.redirectURL
 
   vnode.value = false
 
