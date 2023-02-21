@@ -1,8 +1,8 @@
 # Inertia Modal
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/emargareten/inertia-modal.svg?style=flat-square)](https://packagist.org/packages/emargareten/inertia-modal)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/emargareten/inertia-modal/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/emargareten/inertia-modal/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/emargareten/inertia-modal/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/emargareten/inertia-modal/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/emargareten/inertia-modal/run-tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/emargareten/inertia-modal/actions?query=workflow%3Arun-tests+branch%3Amaster)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/emargareten/inertia-modal/fix-php-code-style-issues.yml?branch=master&label=code%20style&style=flat-square)](https://github.com/emargareten/inertia-modal/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amaster)
 [![Total Downloads](https://img.shields.io/packagist/dt/emargareten/inertia-modal.svg?style=flat-square)](https://packagist.org/packages/emargareten/inertia-modal)
 
 Inertia Modal is a Laravel package that lets you implement backend-driven modal dialogs for Inertia apps.
