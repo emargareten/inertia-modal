@@ -14,12 +14,10 @@
         "inertiajs/inertia-laravel": "^0.6.9"
     },
     "require-dev": {
-        "laravel/pint": "^1.4",
+        "laravel/pint": "^1.5",
         "nunomaduro/collision": "^6.4",
         "nunomaduro/larastan": "^2.4",
         "orchestra/testbench": "^7.20",
-        "pestphp/pest": "^1.22",
-        "pestphp/pest-plugin-laravel": "^1.4",
         "phpunit/phpunit": "^9.5"
     },
     "autoload": {
@@ -35,7 +33,7 @@
     "scripts": {
         "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
-        "test": "vendor/bin/pest",
+        "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"
     },
