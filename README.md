@@ -201,6 +201,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
+This package was highly inspired by [momentum-modal](https://github.com/lepikhinb/momentum-modal)
+
 - [emargareten](https://github.com/emargareten)
 - [All Contributors](../../contributors)
 
