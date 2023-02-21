@@ -3,8 +3,8 @@
 namespace Emargareten\InertiaModal\Tests;
 
 use Emargareten\InertiaModal\InertiaModalServiceProvider;
-use Emargareten\InertiaModal\Tests\Stubs\PostController;
 use Emargareten\InertiaModal\Tests\Stubs\ExampleMiddleware;
+use Emargareten\InertiaModal\Tests\Stubs\PostController;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
