@@ -2,7 +2,6 @@
 
 namespace Emargareten\InertiaModal\Tests;
 
-use Emargareten\InertiaModal\Tests\Stubs\Post;
 use Inertia\Testing\AssertableInertia;
 
 class ModalTest extends TestCase

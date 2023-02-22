@@ -1,6 +1,6 @@
 <?php
 
-namespace Emargareten\InertiaModal\Tests\Stubs;
+namespace Emargareten\InertiaModal\Tests;
 
 use Inertia\Inertia;
 
