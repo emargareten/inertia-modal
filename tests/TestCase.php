@@ -9,6 +9,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Inertia\ServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -29,6 +30,8 @@ class TestCase extends Orchestra
                 Route::get('posts', [PostController::class, 'index'])->name('posts.index');
                 Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
             });
+
+        Inertia::version(null);
     }
 
     public function defineDatabaseMigrations()
