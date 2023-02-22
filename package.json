@@ -1,6 +1,9 @@
 {
     "name": "inertia-modal",
     "version": "0.0.1",
+    "scripts": {
+        "build": "rollup -c"
+    },
     "description": "Implement backend-driven modal dialogs for Inertia apps.",
     "keywords": [
         "laravel",
