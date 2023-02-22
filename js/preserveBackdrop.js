@@ -1,20 +1,20 @@
 import axios from 'axios'
 import { usePage } from '@inertiajs/vue3'
-import {computed} from "vue";
-
-const props = computed(() => usePage().props)
-const component = computed(() => usePage().component)
 
 /**
- * Reuse current (stale) props and component for the modal backdrop
+ * Reuse current props and component for the modal backdrop
  */
 export default function () {
   axios.interceptors.response.use(function(response) {
-    if(response.headers['x-inertia'] && response.data.props?.modal) {
-      let oldProps = JSON.parse(JSON.stringify(props.value))
-      response.data.props = { ...oldProps, ...response.data.props }
-      response.data.component = component.value
+
+    if (response.headers['x-inertia-modal']) {
+      let { component, props } = usePage();
+      props = JSON.parse(JSON.stringify(props));
+      response.data.props = { ...props, ...response.data };
+      response.data.component = component;
+      response.headers['x-inertia'] = true
     }
+
     return response
   })
 }

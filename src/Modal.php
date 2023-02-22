@@ -4,13 +4,13 @@ namespace Emargareten\InertiaModal;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class Modal implements Responsable
 {
@@ -79,7 +79,7 @@ class Modal implements Responsable
     public function render(): mixed
     {
         if (request()->header('X-Inertia') && ! $this->refreshBackdrop) {
-            return $this->renderCurrentComponentWithModal();
+            return $this->renderModal();
         }
 
         Inertia::share(['modal' => $this->component()]);
@@ -117,26 +117,27 @@ class Modal implements Responsable
     }
 
     /**
-     * Rerender the current component with the modal.
+     * Render the modal.
      */
-    protected function renderCurrentComponentWithModal(): Response
+    protected function renderModal(): JsonResponse
     {
-        $shared = Inertia::getShared();
+        $shared = Arr::except(
+            Inertia::getShared(),
+            app('config')->get('inertia-modal.exclude_shared_props', [])
+        );
 
-        Inertia::flushShared();
-
-        $excluded = app('config')->get('inertia-modal.exclude_shared_props', []);
-
-        Inertia::share(Arr::except($shared, $excluded));
-
-        /*
-         * We are returning the modal and it's data as a prop. We are also
-         * passing an empty string as the component name, since we are
-         * reusing the current component. (see preserveBackdrop.js)
-         */
-        return Inertia::render('', [
+        $props = [
+            ...$shared,
             'modal' => $this->component(),
-        ]);
+        ];
+
+        $page = [
+            'props' => $props,
+            'url' => request()->getBaseUrl().request()->getRequestUri(),
+            'version' => Inertia::getVersion(),
+        ];
+
+        return new JsonResponse($page, 200, ['X-Inertia-Modal' => 'true']);
     }
 
     protected function handleRoute(Request $request, Route $route): mixed
