@@ -19,10 +19,10 @@
   function preserveBackdrop () {
     axios.interceptors.response.use(function(response) {
 
-      if(response.headers['x-inertia-modal']) {
+      if (response.headers['x-inertia-modal']) {
         let { component, props } = vue3.usePage();
         props = JSON.parse(JSON.stringify(props));
-        response.data.props = { ...props, ...response.data };
+        response.data.props = { ...props, ...response.data.props };
         response.data.component = component;
         response.headers['x-inertia'] = true;
       }
