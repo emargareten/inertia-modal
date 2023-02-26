@@ -11,6 +11,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class Modal implements Responsable
 {
@@ -121,13 +122,8 @@ class Modal implements Responsable
      */
     protected function renderModal(): JsonResponse
     {
-        $shared = Arr::except(
-            Inertia::getShared(),
-            app('config')->get('inertia-modal.exclude_shared_props', [])
-        );
-
         $props = [
-            ...$shared,
+            ...$this->getSharedProps(),
             'modal' => $this->component(),
         ];
 
@@ -138,6 +134,18 @@ class Modal implements Responsable
         ];
 
         return new JsonResponse($page, 200, ['X-Inertia-Modal' => 'true']);
+    }
+
+    protected function getSharedProps(): array
+    {
+        $shared = Arr::except(
+            Inertia::getShared(),
+            app('config')->get('inertia-modal.exclude_shared_props', [])
+        );
+
+        return (new Response('', $shared))
+            ->toResponse(request())
+            ->getData(true)['props'];
     }
 
     protected function handleRoute(Request $request, Route $route): mixed
