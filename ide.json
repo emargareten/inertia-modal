@@ -1,0 +1,35 @@
+{
+    "$schema": "https://laravel-ide.com/schema/laravel-ide-v2.json",
+    "completions": [
+        {
+            "complete": "routeName",
+            "condition": [
+                {
+                    "methodNames": ["baseRoute"],
+                    "classFqn": ["\\Emargareten\\InertiaModal\\Modal"],
+                    "parameters": [1]
+                }
+            ]
+        },
+        {
+            "complete": "inertiaPage",
+            "condition": [
+                {
+                    "methodNames": ["__construct"],
+                    "classFqn": ["\\Emargareten\\InertiaModal\\Modal"],
+                    "parameters": [1]
+                }
+            ]
+        },
+        {
+            "complete": "inertiaPage",
+            "condition": [
+                {
+                    "methodNames": ["modal"],
+                    "classFqn": ["\\Inertia\\Inertia"],
+                    "parameters": [1]
+                }
+            ]
+        }
+    ]
+}
