@@ -143,6 +143,7 @@ class Modal implements Responsable
             app('config')->get('inertia-modal.exclude_shared_props', [])
         );
 
+        /** @phpstan-ignore-next-line  */
         return (new Response('', $shared))
             ->toResponse(request())
             ->getData(true)['props'];
