@@ -181,6 +181,14 @@ const { show, close, redirect } = useModal()
 </script>
 ```
 
+The `redirect` method will redirect to the base route, you can pass in all inertia visit options as a parameter.
+
+```javascript
+redirect({ preserveScroll: true })
+```
+
+The `close` method will close the modal without redirecting to the base route.
+
 ## Testing
 
 ```bash
