@@ -46,15 +46,10 @@ const component = shallowRef();
 const show = ref(false);
 const vnode = ref();
 
-const setHeaders = () => {
-  axios.defaults.headers.common['X-Inertia-Modal-Key'] = key.value;
-  axios.defaults.headers.common['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
-};
-
-const resetHeaders = () => {
-  delete axios.defaults.headers.common['X-Inertia-Modal-Key'];
-  delete axios.defaults.headers.common['X-Inertia-Modal-Redirect'];
-};
+router.on('before', (event) => {
+  event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
+  event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
+});
 
 const close = () => {
   show.value = false;
@@ -90,8 +85,6 @@ watch(modal, resolveComponent, {
     immediate: true,
 });
 
-watch(key, setHeaders);
-
 const redirect = () => {
   const redirectURL = modal.value?.redirectURL;
 
@@ -104,7 +97,6 @@ const redirect = () => {
   return router.visit(redirectURL, {
     preserveScroll: true,
     preserveState: true,
-    onFinish: resetHeaders,
   })
 };
 
