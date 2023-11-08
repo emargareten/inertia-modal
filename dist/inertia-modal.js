@@ -85,7 +85,10 @@ watch(modal, resolveComponent, {
     immediate: true,
 });
 
-const redirect = () => {
+/**
+ * @param {import('@inertiajs/core').VisitOptions} options
+ */
+const redirect = (options = {}) => {
   const redirectURL = modal.value?.redirectURL;
 
   vnode.value = false;
@@ -94,10 +97,7 @@ const redirect = () => {
     return
   }
 
-  return router.visit(redirectURL, {
-    preserveScroll: true,
-    preserveState: true,
-  })
+  return router.visit(redirectURL, options)
 };
 
 const useModal = () => {
