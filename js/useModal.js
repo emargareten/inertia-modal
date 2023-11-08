@@ -24,7 +24,6 @@ const resetHeaders = () => {
 
 const close = () => {
   show.value = false
-  resetHeaders()
 }
 
 const resolveComponent = () => {
@@ -71,6 +70,7 @@ const redirect = () => {
   return router.visit(redirectURL, {
     preserveScroll: true,
     preserveState: true,
+    onSuccess: resetHeaders,
   })
 }
 

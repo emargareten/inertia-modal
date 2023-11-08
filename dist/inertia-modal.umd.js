@@ -60,7 +60,6 @@
 
   const close = () => {
     show.value = false;
-    resetHeaders();
   };
 
   const resolveComponent = () => {
@@ -107,6 +106,7 @@
     return vue3.router.visit(redirectURL, {
       preserveScroll: true,
       preserveState: true,
+      onFinish: resetHeaders,
     })
   };
 
