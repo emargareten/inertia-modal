@@ -1,10 +1,14 @@
-import { defineComponent } from 'vue'
-import { useModal } from './useModal'
+import { defineComponent } from "vue";
+import { useModal } from "./useModal";
 
 export const Modal = defineComponent({
   setup() {
-    const { vnode } = useModal()
+    const { vnode, close } = useModal();
 
-    return () => vnode.value
+    onBeforeUnmount(() => {
+      close();
+    });
+
+    return () => vnode.value;
   },
-})
+});
