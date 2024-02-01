@@ -46,6 +46,9 @@ import { Modal } from '/vendor/emargareten/inertia-modal'
 </template>
 ```
 
+> **Note**
+> Ensure that the layout remains [persistent](https://inertiajs.com/pages#persistent-layouts) throughout the entire application. If you have multiple layouts, create a base layout that should invoke the modal, using nested layouts.
+
 ### Plugin
 
 Set up a `modal` plugin with the same component resolver you use to render Inertia pages.
