@@ -9,7 +9,7 @@ Inertia Modal is a Laravel package that lets you implement backend-driven modal 
 
 Define modal routes on the backend and dynamically render them when you visit a dialog route.
 
-> **Note**
+> [!NOTE]
 > This package supports Vue 3 only
 
 ## Installation
@@ -21,7 +21,7 @@ composer require emargareten/inertia-modal
 ```
 ## Frontend Setup
 
-> **Warning**
+> [!WARNING]
 > The package utilizes `axios` under the hood. If your app is already using `axios` as a dependency, make sure to lock it to the same version Inertia uses.
 
 ### `Modal` Component
@@ -43,7 +43,7 @@ import { Modal } from '/vendor/emargareten/inertia-modal'
 </template>
 ```
 
-> **Note**
+> [!NOTE]
 > Ensure that the layout remains [persistent](https://inertiajs.com/pages#persistent-layouts) throughout the entire application. If you have multiple layouts, create a base layout that should invoke the modal, using nested layouts.
 
 ### Plugin
