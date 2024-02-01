@@ -17,8 +17,8 @@
         "larastan/larastan": "^2.8.1",
         "laravel/pint": "^1.13.10",
         "nunomaduro/collision": "^6.4",
-        "orchestra/testbench": "^7.34.1",
-        "phpunit/phpunit": "^9.6.13"
+        "orchestra/testbench": "^8.21",
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "psr-4": {
