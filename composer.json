@@ -14,9 +14,9 @@
         "inertiajs/inertia-laravel": "^0.6.9"
     },
     "require-dev": {
-        "laravel/pint": "^1.13.6",
+        "larastan/larastan": "^2.8.1",
+        "laravel/pint": "^1.13.10",
         "nunomaduro/collision": "^6.4",
-        "nunomaduro/larastan": "^2.6.4",
         "orchestra/testbench": "^7.34.1",
         "phpunit/phpunit": "^9.6.13"
     },
