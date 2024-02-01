@@ -36,6 +36,6 @@
         "vue": "^3.2.45"
     },
     "devDependencies": {
-        "rollup": "^3.12.1"
+        "rollup": "^4.9.6"
     }
 }
