@@ -5,9 +5,7 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/emargareten/inertia-modal/fix-php-code-style-issues.yml?branch=master&label=code%20style&style=flat-square)](https://github.com/emargareten/inertia-modal/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amaster)
 [![Total Downloads](https://img.shields.io/packagist/dt/emargareten/inertia-modal.svg?style=flat-square)](https://packagist.org/packages/emargareten/inertia-modal)
 
-Inertia Modal is a Laravel package that lets you implement backend-driven modal dialogs for Inertia apps.
-
-Define modal routes on the backend and dynamically render them when you visit a dialog route.
+Inertia Modal is a Laravel package that lets you implement backend-driven modal dialogs for Inertia apps. With this package, you can define modal routes on the backend and dynamically render them when you visit a dialog route.
 
 > [!NOTE]
 > This package supports Vue 3 only
@@ -32,14 +30,14 @@ Put the `Modal` component somewhere within the layout.
 
 ```vue
 <script setup>
-import { Modal } from '/vendor/emargareten/inertia-modal'
+import { Modal } from '../../vendor/emargareten/inertia-modal'
 </script>
 
 <template>
-    <div>
-        <!-- layout -->
-        <Modal />
-    </div>
+  <div>
+    <!-- layout -->
+    <Modal />
+  </div>
 </template>
 ```
 
@@ -53,7 +51,7 @@ Set up a `modal` plugin with the same component resolver you use to render Inert
 #### Vite
 
 ```javascript
-import { modal } from '/vendor/emargareten/inertia-modal'
+import { modal } from '../../vendor/emargareten/inertia-modal'
 
 createInertiaApp({
   resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
@@ -71,7 +69,7 @@ createInertiaApp({
 #### Laravel Mix
 
 ```javascript
-import { modal } from '/vendor/emargareten/inertia-modal'
+import { modal } from '../../vendor/emargareten/inertia-modal'
 
 createInertiaApp({
   resolve: (name) => require(`./Pages/${name}`),
@@ -174,8 +172,8 @@ This example is a simple headlessui modal, you can add more transitions etc. see
 </template>
 
 <script setup>
-import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from "@headlessui/vue"
-import { useModal } from "vendor/emargareten/inertia-modal"
+import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import { useModal } from '../../vendor/emargareten/inertia-modal'
 
 const { show, close, redirect } = useModal()
 </script>
@@ -188,6 +186,34 @@ redirect({ preserveScroll: true })
 ```
 
 The `close` method will close the modal without redirecting to the base route.
+
+> [!NOTE]
+> For a more concise setup, consider configuring aliases instead of specifying the full path.
+>
+> Using vite:
+> ```js
+> // vite.config.js
+> export default defineConfig({
+>   resolve: {
+>     alias: {
+>       'inertia-modal': path.resolve('vendor/emargareten/inertia-modal'),
+>     },
+>   },
+> });
+> ```
+>
+> Using mix:
+> ```js
+> // webpack.mix.js
+> mix.alias({
+>   'inertia-modal': path.resolve('vendor/emargareten/inertia-modal'),
+> });
+> ```
+> 
+> Now you can import the modules like this:
+> ```js
+> import { useModal } from 'inertia-modal'
+> ```
 
 ## Testing
 
