@@ -102,7 +102,7 @@ Render a modal from a controller. Specify the `base` route to render the backgro
 use Emargareten\InertiaModal\Modal;
 use Inertia\Inertia;
 
-class ShowTweet extends Controller
+class UserController extends Controller
 {
     // ...
     
