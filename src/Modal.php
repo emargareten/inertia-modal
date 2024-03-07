@@ -2,6 +2,7 @@
 
 namespace Emargareten\InertiaModal;
 
+use Closure;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Responsable;
@@ -207,7 +208,7 @@ class Modal implements Responsable
                 $value = App::call($value);
             }
 
-            if ($value instanceof PromiseInterface) {
+            if (interface_exists(PromiseInterface::class) && $value instanceof PromiseInterface) {
                 $value = $value->wait();
             }
 
