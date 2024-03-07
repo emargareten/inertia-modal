@@ -2,7 +2,8 @@ import { router, usePage } from '@inertiajs/vue3'
 import { defineAsyncComponent, h, nextTick, watch, computed, ref, shallowRef } from 'vue'
 import resolver from './resolver'
 
-const modal = computed(() => usePage()?.props?.modal);
+const page = usePage()
+const modal = computed(() => page?.props?.modal);
 const props = computed(() => modal.value?.props)
 const key = computed(() => modal.value?.key)
 

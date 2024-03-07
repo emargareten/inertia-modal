@@ -39,7 +39,8 @@
     },
   };
 
-  const modal = vue.computed(() => vue3.usePage()?.props?.modal);
+  const page = vue3.usePage();
+  const modal = vue.computed(() => page?.props?.modal);
   const props = vue.computed(() => modal.value?.props);
   const key = vue.computed(() => modal.value?.key);
 
