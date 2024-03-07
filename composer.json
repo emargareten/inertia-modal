@@ -14,11 +14,11 @@
         "inertiajs/inertia-laravel": "^0.6.9"
     },
     "require-dev": {
-        "larastan/larastan": "^2.8.1",
-        "laravel/pint": "^1.13.10",
+        "larastan/larastan": "^2.9.2",
+        "laravel/pint": "^1.14.0",
         "nunomaduro/collision": "^6.4",
-        "orchestra/testbench": "^8.21",
-        "phpunit/phpunit": "^10.5"
+        "orchestra/testbench": "^8.21.1",
+        "phpunit/phpunit": "^10.5.11"
     },
     "autoload": {
         "psr-4": {
