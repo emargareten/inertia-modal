@@ -2,15 +2,20 @@
 
 namespace Emargareten\InertiaModal;
 
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceResponse;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\LazyProp;
 use Inertia\Response;
 
 class Modal implements Responsable
@@ -166,7 +171,7 @@ class Modal implements Responsable
         return [
             'component' => $this->component,
             'redirectURL' => $this->redirectURL(),
-            'props' => $this->props,
+            'props' => $this->resolvePropertyInstances($this->props),
             'key' => request()->header('X-Inertia-Modal-Key', (string) Str::uuid()),
         ];
     }
@@ -186,6 +191,47 @@ class Modal implements Responsable
         }
 
         return $this->baseURL;
+    }
+
+    /**
+     * Resolve all necessary class instances in the given props.
+     */
+    public function resolvePropertyInstances(array $props, bool $unpackDotProps = true): array
+    {
+        foreach ($props as $key => $value) {
+            if ($value instanceof Closure) {
+                $value = App::call($value);
+            }
+
+            if ($value instanceof LazyProp) {
+                $value = App::call($value);
+            }
+
+            if ($value instanceof PromiseInterface) {
+                $value = $value->wait();
+            }
+
+            if ($value instanceof ResourceResponse || $value instanceof JsonResource) {
+                $value = $value->toResponse(request())->getData(true);
+            }
+
+            if ($value instanceof Arrayable) {
+                $value = $value->toArray();
+            }
+
+            if (is_array($value)) {
+                $value = $this->resolvePropertyInstances($value, false);
+            }
+
+            if ($unpackDotProps && str_contains($key, '.')) {
+                Arr::set($props, $key, $value);
+                unset($props[$key]);
+            } else {
+                $props[$key] = $value;
+            }
+        }
+
+        return $props;
     }
 
     public function toResponse($request)
