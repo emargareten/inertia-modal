@@ -11,14 +11,14 @@
     "require": {
         "php": "^8.0",
         "illuminate/support": "^8.24|^9.0|^10.0|^11.0",
-        "inertiajs/inertia-laravel": "^0.6.9"
+        "inertiajs/inertia-laravel": "^0.6.9|^1.0.0"
     },
     "require-dev": {
         "larastan/larastan": "^2.9.2",
         "laravel/pint": "^1.14.0",
-        "nunomaduro/collision": "^6.4",
-        "orchestra/testbench": "^8.21.1",
-        "phpunit/phpunit": "^10.5.11"
+        "nunomaduro/collision": "^8.1.1",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^10.5.13"
     },
     "autoload": {
         "psr-4": {
