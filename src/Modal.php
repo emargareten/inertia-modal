@@ -170,7 +170,7 @@ class Modal implements Responsable
     protected function component(): array
     {
         $props = $this->props instanceof Arrayable ? $this->props->toArray() : $this->props;
-        
+
         return [
             'component' => $this->component,
             'redirectURL' => $this->redirectURL(),
