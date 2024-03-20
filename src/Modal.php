@@ -169,10 +169,12 @@ class Modal implements Responsable
 
     protected function component(): array
     {
+        $props = $this->props instanceof Arrayable ? $this->props->toArray() : $this->props;
+        
         return [
             'component' => $this->component,
             'redirectURL' => $this->redirectURL(),
-            'props' => $this->resolvePropertyInstances($this->props),
+            'props' => $this->resolvePropertyInstances($props),
             'key' => request()->header('X-Inertia-Modal-Key', (string) Str::uuid()),
         ];
     }
