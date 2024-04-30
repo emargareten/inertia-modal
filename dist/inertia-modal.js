@@ -47,10 +47,12 @@ const component = shallowRef();
 const show = ref(false);
 const vnode = ref();
 
-router.on('before', (event) => {
-  event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
-  event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
-});
+if (typeof document !== 'undefined') {
+  router.on('before', (event) => {
+    event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
+    event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
+  });
+}
 
 const close = () => {
   show.value = false;
