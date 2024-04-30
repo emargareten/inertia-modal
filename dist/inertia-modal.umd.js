@@ -49,10 +49,12 @@
   const show = vue.ref(false);
   const vnode = vue.ref();
 
-  vue3.router.on('before', (event) => {
-    event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
-    event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
-  });
+  if (typeof document !== 'undefined') {
+    vue3.router.on('before', (event) => {
+      event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
+      event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
+    });
+  }
 
   const close = () => {
     show.value = false;
