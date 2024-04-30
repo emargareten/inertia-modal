@@ -133,9 +133,10 @@ class Modal implements Responsable
             'modal' => $this->component(),
         ];
 
+        $request = request();
         $page = [
             'props' => $props,
-            'url' => request()->getBaseUrl().request()->getRequestUri(),
+            'url' => Str::start(Str::after($request->fullUrl(), $request->getSchemeAndHttpHost()), '/'),
             'version' => Inertia::getVersion(),
         ];
 
