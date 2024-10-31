@@ -22,6 +22,7 @@
       if (response.headers['x-inertia-modal']) {
         let { component, props } = vue3.usePage();
         props = JSON.parse(JSON.stringify(props));
+        response.data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
         response.data.props = { ...props, ...response.data.props };
         response.data.component = component;
         response.headers['x-inertia'] = true;
