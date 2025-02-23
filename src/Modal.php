@@ -30,8 +30,7 @@ class Modal implements Responsable
     public function __construct(
         protected string $component,
         protected array|Arrayable $props = []
-    ) {
-    }
+    ) {}
 
     /**
      * Set the URL for the backdrop page.
