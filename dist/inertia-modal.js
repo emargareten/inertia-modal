@@ -1,6 +1,5 @@
 import { ref, computed, shallowRef, watch, defineAsyncComponent, h, nextTick, defineComponent } from 'vue';
-import axios from 'axios';
-import { usePage, router } from '@inertiajs/vue3';
+import { http, usePage, router } from '@inertiajs/vue3';
 
 const resolveCallback = ref();
 
@@ -11,46 +10,43 @@ var resolver = {
   resolve: (name) => resolveCallback.value(name),
 };
 
+const mergePageData = (currentValue, responseValue) => {
+  if (Array.isArray(currentValue) || Array.isArray(responseValue)) {
+    return [...new Set([...(currentValue || []), ...(responseValue || [])])]
+  }
+
+  return {
+    ...JSON.parse(JSON.stringify(currentValue || {})),
+    ...(responseValue || {}),
+  }
+};
+
 /**
  * Reuse current props and component for the modal backdrop
  */
 function preserveBackdrop (app) {
-  axios.interceptors.response.use(function(response) {
+  http.onResponse((response) => {
 
     if (response.headers['x-inertia-modal']) {
-      // Access full page via $page global (includes scrollProps, mergeProps, etc.)
       const currentPage = app.config.globalProperties.$page;
-
 
       response.data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
 
-      // Preserve component and props from backdrop
       response.data.component = currentPage.component;
       response.data.props = {
         ...JSON.parse(JSON.stringify(currentPage.props)),
         ...response.data.props
       };
 
-      // Preserve scrollProps (required for InfiniteScroll)
-      if (currentPage.scrollProps) {
-        response.data.scrollProps = {
-          ...JSON.parse(JSON.stringify(currentPage.scrollProps)),
-          ...(response.data.scrollProps || {})
-        };
-      }
+      const preserveKeys = ['scrollProps', 'mergeProps', 'prependProps', 'deepMergeProps', 'matchPropsOn', 'deferredProps', 'sharedProps', 'onceProps'];
 
-      // Preserve other merge-related properties for partial reloads
-      const preserveKeys = ['mergeProps', 'prependProps', 'deepMergeProps', 'matchPropsOn'];
       for (const key of preserveKeys) {
         if (currentPage[key]) {
-          response.data[key] = {
-            ...currentPage[key],
-            ...(response.data[key] || {})
-          };
+          response.data[key] = mergePageData(currentPage[key], response.data[key]);
         }
       }
 
-      response.headers['x-inertia'] = true;
+      response.headers['x-inertia'] = 'true';
     }
 
     return response
@@ -77,8 +73,13 @@ const vnode = ref();
 
 if (typeof document !== 'undefined') {
   router.on('before', (event) => {
-    event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
-    event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL;
+    if (key.value) {
+      event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value;
+    }
+
+    if (modal.value?.redirectURL) {
+      event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value.redirectURL;
+    }
   });
 }
 

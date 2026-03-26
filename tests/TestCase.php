@@ -22,7 +22,7 @@ class TestCase extends Orchestra
 
         View::addLocation(__DIR__);
         config()->set('inertia.testing.ensure_pages_exist', false);
-        config()->set('inertia.testing.page_paths', [realpath(__DIR__)]);
+        config()->set('inertia.pages.paths', [realpath(__DIR__)]);
 
         Route::middleware([StartSession::class, Middleware::class, SubstituteBindings::class])
             ->group(function () {

@@ -10,6 +10,9 @@ Inertia Modal is a Laravel package that lets you implement backend-driven modal 
 > [!NOTE]
 > This package supports Vue 3 only
 
+> [!NOTE]
+> Inertia Modal targets Inertia v3 and uses Inertia's built-in HTTP client. No separate Axios setup is required.
+
 ## Installation
 
 You can install the package via composer:
@@ -18,9 +21,6 @@ You can install the package via composer:
 composer require emargareten/inertia-modal
 ```
 ## Frontend Setup
-
-> [!WARNING]
-> The package utilizes `axios` under the hood. If your app is already using `axios` as a dependency, make sure to lock it to the same version Inertia uses.
 
 ### `Modal` Component
 
@@ -55,8 +55,8 @@ import { modal } from '../../vendor/emargareten/inertia-modal'
 
 createInertiaApp({
   resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
-  setup({ el, app, props, plugin }) {
-    createApp({ render: () => h(app, props) })
+  setup({ el, App, props, plugin }) {
+    createApp({ render: () => h(App, props) })
       .use(modal, {
         resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
       })
@@ -72,11 +72,11 @@ createInertiaApp({
 import { modal } from '../../vendor/emargareten/inertia-modal'
 
 createInertiaApp({
-  resolve: (name) => require(`./Pages/${name}`),
+  resolve: (name) => import(`./Pages/${name}.vue`),
   setup({ el, App, props, plugin }) {
     createApp({ render: () => h(App, props) })
       .use(modal, {
-        resolve: (name) => import(`./Pages/${name}`),
+        resolve: (name) => import(`./Pages/${name}.vue`),
       })
       .use(plugin)
       .mount(el)
