@@ -14,8 +14,13 @@ const vnode = ref()
 
 if (typeof document !== 'undefined') {
   router.on('before', (event) => {
-    event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value
-    event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value?.redirectURL
+    if (key.value) {
+      event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value
+    }
+
+    if (modal.value?.redirectURL) {
+      event.detail.visit.headers['X-Inertia-Modal-Redirect'] = modal.value.redirectURL
+    }
   })
 }
 

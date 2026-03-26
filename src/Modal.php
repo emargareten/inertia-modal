@@ -16,7 +16,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Inertia\LazyProp;
+use Inertia\OptionalProp;
 use Inertia\Response;
 
 class Modal implements Responsable
@@ -149,10 +149,14 @@ class Modal implements Responsable
             app('config')->get('inertia-modal.exclude_shared_props', [])
         );
 
-        /** @phpstan-ignore-next-line  */
-        return (new Response('', $shared))
-            ->toResponse(request())
-            ->getData(true)['props'];
+        $response = (new Response('', [], $shared))->toResponse(request());
+        $content = $response->getContent();
+
+        if (! is_string($content)) {
+            return [];
+        }
+
+        return json_decode($content, true)['props'] ?? [];
     }
 
     protected function handleRoute(Request $request, Route $route): mixed
@@ -206,7 +210,7 @@ class Modal implements Responsable
                 $value = App::call($value);
             }
 
-            if ($value instanceof LazyProp) {
+            if ($value instanceof OptionalProp) {
                 $value = App::call($value);
             }
 

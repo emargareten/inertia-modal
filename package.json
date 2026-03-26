@@ -14,16 +14,17 @@
     "bugs": "https://github.com/emargareten/inertia-modal/issues",
     "license": "MIT",
     "type": "module",
+    "types": "./index.d.ts",
     "files": [
-        "dist"
+        "dist",
+        "index.d.ts"
     ],
     "source": "./js/index.js",
     "module": "./dist/inertia-modal.js",
-    "main": "./dist/inertia-modal.umd.js",
     "exports": {
         ".": {
-            "import": "./dist/inertia-modal.js",
-            "require": "./dist/inertia-modal.umd.js"
+            "types": "./index.d.ts",
+            "import": "./dist/inertia-modal.js"
         }
     },
     "repository": {
@@ -31,11 +32,10 @@
         "url": "https://github.com/emargareten/inertia-modal.git"
     },
     "peerDependencies": {
-        "@inertiajs/vue3": "^1.0.0 || ^2.0.0",
-        "axios": "^1.2.0",
+        "@inertiajs/vue3": "^3.0.0",
         "vue": "^3.2.45"
     },
     "devDependencies": {
-        "rollup": "^4.24.3"
+        "rollup": "^4.29.2"
     }
 }
