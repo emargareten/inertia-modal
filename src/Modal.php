@@ -251,4 +251,9 @@ class Modal implements Responsable
 
         return $response;
     }
+
+    public function getProps(): array
+    {
+        return $this->props;
+    }
 }
