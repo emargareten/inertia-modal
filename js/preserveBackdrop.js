@@ -1,4 +1,5 @@
 import { http } from '@inertiajs/vue3'
+import { toRaw } from 'vue'
 
 const mergePageData = (currentValue, responseValue) => {
   if (Array.isArray(currentValue) || Array.isArray(responseValue)) {
@@ -6,7 +7,7 @@ const mergePageData = (currentValue, responseValue) => {
   }
 
   return {
-    ...JSON.parse(JSON.stringify(currentValue || {})),
+    ...toRaw(currentValue || {}),
     ...(responseValue || {}),
   }
 }
@@ -24,7 +25,7 @@ export default function (app) {
 
       response.data.component = currentPage.component
       response.data.props = {
-        ...JSON.parse(JSON.stringify(currentPage.props)),
+        ...toRaw(currentPage.props),
         ...response.data.props
       }
 

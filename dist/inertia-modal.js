@@ -1,4 +1,4 @@
-import { ref, computed, shallowRef, watch, defineAsyncComponent, h, nextTick, defineComponent } from 'vue';
+import { ref, toRaw, computed, shallowRef, watch, defineAsyncComponent, h, nextTick, defineComponent } from 'vue';
 import { http, usePage, router } from '@inertiajs/vue3';
 
 const resolveCallback = ref();
@@ -16,7 +16,7 @@ const mergePageData = (currentValue, responseValue) => {
   }
 
   return {
-    ...JSON.parse(JSON.stringify(currentValue || {})),
+    ...toRaw(currentValue || {}),
     ...(responseValue || {}),
   }
 };
@@ -34,7 +34,7 @@ function preserveBackdrop (app) {
 
       response.data.component = currentPage.component;
       response.data.props = {
-        ...JSON.parse(JSON.stringify(currentPage.props)),
+        ...toRaw(currentPage.props),
         ...response.data.props
       };
 
