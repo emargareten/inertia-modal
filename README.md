@@ -125,15 +125,6 @@ class UserController extends Controller
 
 The component argument follows Inertia's component conventions, including configured component transformers and string-backed enums.
 
-You can add props later with `with()`. It follows Inertia's native `Response::with()` behavior, so it accepts an array, a prop name and value, or a `ProvidesInertiaProperties` instance:
-
-```php
-return Inertia::modal('Users/Show', ['user' => $user])
-    ->with(['permissions' => $permissions])
-    ->with('canEdit', $request->user()->can('update', $user))
-    ->baseRoute('users.index');
-```
-
 Dot notation is supported for modal props:
 
 ```php
