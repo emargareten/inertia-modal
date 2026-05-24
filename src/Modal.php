@@ -2,22 +2,25 @@
 
 namespace Emargareten\InertiaModal;
 
+use BackedEnum;
 use Closure;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\Json\ResourceResponse;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Inertia\OptionalProp;
+use Inertia\ProvidesInertiaProperties;
 use Inertia\Response;
+use Inertia\ResponseFactory;
+use Inertia\Support\Header;
+use InvalidArgumentException;
+use LogicException;
+use ReflectionException;
+use ReflectionMethod;
+use ReflectionProperty;
+use UnitEnum;
 
 class Modal implements Responsable
 {
@@ -27,8 +30,10 @@ class Modal implements Responsable
 
     protected bool $forceBase = false;
 
+    protected ?string $transformedComponent = null;
+
     public function __construct(
-        protected string $component,
+        protected BackedEnum|UnitEnum|string $component,
         protected array|Arrayable $props = []
     ) {}
 
@@ -55,7 +60,7 @@ class Modal implements Responsable
     /**
      * Force refreshing backdrop data.
      */
-    public function refreshBackdrop($refresh = true): static
+    public function refreshBackdrop(bool $refresh = true): static
     {
         $this->refreshBackdrop = $refresh;
 
@@ -74,9 +79,21 @@ class Modal implements Responsable
 
     /**
      * Add props to the modal.
+     *
+     * @param  string|array<string, mixed>|ProvidesInertiaProperties  $key
      */
-    public function with(array $props): static
+    public function with($key, mixed $value = null): static
     {
+        $props = $this->props instanceof Arrayable ? $this->props->toArray() : $this->props;
+
+        if ($key instanceof ProvidesInertiaProperties) {
+            $props[] = $key;
+        } elseif (is_array($key)) {
+            $props = array_merge($props, $key);
+        } else {
+            $props[$key] = $value;
+        }
+
         $this->props = $props;
 
         return $this;
@@ -84,14 +101,14 @@ class Modal implements Responsable
 
     public function render(): mixed
     {
-        if (request()->header('X-Inertia') && ! $this->refreshBackdrop) {
+        if (request()->header(Header::INERTIA) && ! $this->refreshBackdrop) {
             return $this->renderModal();
         }
 
-        Inertia::share(['modal' => $this->component()]);
+        Inertia::share(['modal' => $this->modalPayload()]);
 
-        if (request()->header('X-Inertia') && request()->header('X-Inertia-Partial-Component')) {
-            return Inertia::render(request()->header('X-Inertia-Partial-Component'));
+        if (request()->header(Header::INERTIA) && request()->header(Header::PARTIAL_COMPONENT)) {
+            return $this->partialBackdropResponse();
         }
 
         $originalRequest = app('request');
@@ -108,18 +125,19 @@ class Modal implements Responsable
 
         $router = app('router');
 
-        $baseRoute = $router->getRoutes()->match($request);
-
         $request->headers->replace($originalRequest->headers->all());
 
         $request->setJson($originalRequest->json())
-            ->setUserResolver(fn () => $originalRequest->getUserResolver())
-            ->setRouteResolver(fn () => $baseRoute)
+            ->setUserResolver($originalRequest->getUserResolver())
             ->setLaravelSession($originalRequest->session());
 
         app()->instance('request', $request);
 
-        return $this->handleRoute($request, $baseRoute);
+        try {
+            return $router->dispatch($request);
+        } finally {
+            app()->instance('request', $originalRequest);
+        }
     }
 
     /**
@@ -127,118 +145,291 @@ class Modal implements Responsable
      */
     protected function renderModal(): JsonResponse
     {
-        $props = [
-            ...$this->getSharedProps(),
-            'modal' => $this->component(),
-        ];
+        $page = $this->inertiaPage([
+            'modal' => $this->modalPayload(transformComponent: (bool) request()->header(Header::PARTIAL_COMPONENT)),
+        ]);
 
-        $request = request();
-        $page = [
-            'props' => $props,
-            'url' => Str::start(Str::after($request->fullUrl(), $request->getSchemeAndHttpHost()), '/'),
-            'version' => Inertia::getVersion(),
-        ];
+        if (isset($page['props']['modal'])) {
+            $page['props']['modal']['component'] = $this->modalComponentName($page);
+        }
 
         return new JsonResponse($page, 200, ['X-Inertia-Modal' => 'true']);
     }
 
-    protected function getSharedProps(): array
+    protected function inertiaPage(array $props): array
     {
-        $shared = Arr::except(
-            Inertia::getShared(),
+        $shared = Inertia::getShared();
+        $filteredShared = Arr::except(
+            $shared,
             app('config')->get('inertia-modal.exclude_shared_props', [])
         );
 
-        $response = (new Response('', [], $shared))->toResponse(request());
+        Inertia::flushShared();
+        Inertia::share($filteredShared);
+
+        try {
+            $response = $this->inertiaResponse($filteredShared, $props)->toResponse(request());
+        } finally {
+            Inertia::flushShared();
+            Inertia::share($shared);
+        }
+
         $content = $response->getContent();
 
         if (! is_string($content)) {
             return [];
         }
 
-        return json_decode($content, true)['props'] ?? [];
+        return json_decode($content, true) ?? [];
     }
 
-    protected function handleRoute(Request $request, Route $route): mixed
+    protected function inertiaResponse(array $shared, array $props): Response
     {
-        $router = app('router');
+        if ($partialComponent = request()->header(Header::PARTIAL_COMPONENT)) {
+            return $this->makeResponse($partialComponent, $shared, $props);
+        }
 
-        $middleware = new SubstituteBindings($router);
+        return Inertia::render($this->component, $props);
+    }
 
-        return $middleware->handle(
-            $request,
-            fn () => $route->run()
+    protected function partialBackdropResponse(): Response
+    {
+        return $this->makeResponse(
+            request()->header(Header::PARTIAL_COMPONENT),
+            Inertia::getShared(),
+            [],
         );
     }
 
-    protected function component(): array
+    /**
+     * Build a Response for an already-transformed component while preserving the
+     * application's Inertia settings (root view, history encryption and custom URL
+     * resolver) that ResponseFactory::render() would normally apply. The component
+     * name comes back from the client already transformed, so render() cannot be
+     * used here without transforming it a second time.
+     */
+    protected function makeResponse(string $component, array $shared, array $props): Response
+    {
+        $factory = app(ResponseFactory::class);
+
+        return new Response(
+            component: $component,
+            sharedProps: $shared,
+            props: $props,
+            rootView: $this->factorySetting($factory, 'rootView') ?? 'app',
+            version: Inertia::getVersion(),
+            encryptHistory: $this->factorySetting($factory, 'encryptHistory')
+                ?? app('config')->get('inertia.history.encrypt', false),
+            urlResolver: $this->factorySetting($factory, 'urlResolver'),
+        );
+    }
+
+    protected function factorySetting(ResponseFactory $factory, string $property): mixed
+    {
+        try {
+            return (new ReflectionProperty($factory, $property))->getValue($factory);
+        } catch (ReflectionException) {
+            return null;
+        }
+    }
+
+    protected function modalComponentName(array $page): string
+    {
+        if (! request()->header(Header::PARTIAL_COMPONENT) && is_string($page['component'] ?? null)) {
+            return $page['component'];
+        }
+
+        return $this->transformedComponentName();
+    }
+
+    protected function transformedComponentName(): string
+    {
+        if ($this->transformedComponent !== null) {
+            return $this->transformedComponent;
+        }
+
+        $component = $this->component;
+        $factory = app(ResponseFactory::class);
+
+        // Inertia owns component transformation. Reflection keeps this adapter aligned
+        // without constructing an extra Response and consuming session-backed flags.
+        try {
+            $transform = new ReflectionMethod($factory, 'transformComponent');
+        } catch (ReflectionException $exception) {
+            throw new LogicException('Inertia modal component transformers require inertiajs/inertia-laravel to expose ResponseFactory::transformComponent().', previous: $exception);
+        }
+
+        $component = $transform->invoke($factory, $component);
+
+        $component = match (true) {
+            $component instanceof BackedEnum => $component->value,
+            $component instanceof UnitEnum => $component->name,
+            default => $component,
+        };
+
+        if (! is_string($component)) {
+            throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
+        }
+
+        return $this->transformedComponent = $component;
+    }
+
+    protected function rawComponentName(): string
+    {
+        $component = match (true) {
+            $this->component instanceof BackedEnum => $this->component->value,
+            $this->component instanceof UnitEnum => $this->component->name,
+            default => $this->component,
+        };
+
+        if (! is_string($component)) {
+            throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
+        }
+
+        return $component;
+    }
+
+    protected function modalPayload(bool $transformComponent = true): array
     {
         $props = $this->props instanceof Arrayable ? $this->props->toArray() : $this->props;
 
         return [
-            'component' => $this->component,
+            'component' => $transformComponent ? $this->transformedComponentName() : $this->rawComponentName(),
             'redirectURL' => $this->redirectURL(),
-            'props' => $this->resolvePropertyInstances($props),
-            'key' => request()->header('X-Inertia-Modal-Key', (string) Str::uuid()),
+            'props' => $this->unpackDotProps($props),
+            'key' => $this->modalKey(),
         ];
     }
 
-    protected function redirectURL(): string
+    /**
+     * Reuse the client-supplied modal key only for sparse reloads of the modal
+     * already on screen (e.g. deferred `modal.props.*` requests). A fresh modal
+     * navigation carries the previous modal's key (sent on every visit by the
+     * frontend); generating a new key there avoids the new modal inheriting the
+     * previous one's page metadata and Vue state. A full `modal` partial (e.g.
+     * `only: ['modal']`) fetches a different modal instance, so it gets a new key.
+     */
+    protected function modalKey(): string
     {
-        if ($this->forceBase) {
-            return $this->baseURL;
+        if ($this->isSparseModalReload()) {
+            return request()->header('X-Inertia-Modal-Key', (string) Str::uuid());
         }
 
-        if (request()->header('X-Inertia-Modal-Redirect')) {
-            return request()->header('X-Inertia-Modal-Redirect');
-        }
-
-        if (request()->header('X-Inertia') && request()->headers->get('referer')) {
-            return request()->headers->get('referer');
-        }
-
-        return $this->baseURL;
+        return (string) Str::uuid();
     }
 
-    /**
-     * Resolve all necessary class instances in the given props.
-     */
-    public function resolvePropertyInstances(array $props, bool $unpackDotProps = true): array
+    protected function isSparseModalReload(): bool
+    {
+        if (! request()->header(Header::PARTIAL_COMPONENT)) {
+            return false;
+        }
+
+        $only = $this->partialHeaderValues(Header::PARTIAL_ONLY);
+
+        if ($only !== []) {
+            $targetsModalChild = array_filter($only, fn (string $path) => str_starts_with($path, 'modal.'));
+
+            return $targetsModalChild !== [] && ! in_array('modal', $only, true);
+        }
+
+        $except = $this->partialHeaderValues(Header::PARTIAL_EXCEPT);
+
+        if ($except !== []) {
+            return ! in_array('modal', $except, true);
+        }
+
+        return false;
+    }
+
+    protected function partialHeaderValues(string $header): array
+    {
+        return array_values(array_filter(
+            array_map('trim', explode(',', (string) request()->header($header, ''))),
+            fn (string $path) => $path !== ''
+        ));
+    }
+
+    protected function unpackDotProps(array $props): array
     {
         foreach ($props as $key => $value) {
+            if (! is_string($key) || ! str_contains($key, '.')) {
+                continue;
+            }
+
             if ($value instanceof Closure) {
-                $value = App::call($value);
-            }
-
-            if ($value instanceof OptionalProp) {
-                $value = App::call($value);
-            }
-
-            if (interface_exists(PromiseInterface::class) && $value instanceof PromiseInterface) {
-                $value = $value->wait();
-            }
-
-            if ($value instanceof ResourceResponse || $value instanceof JsonResource) {
-                $value = $value->toResponse(request())->getData(true);
+                $value = app()->call($value);
             }
 
             if ($value instanceof Arrayable) {
                 $value = $value->toArray();
             }
 
-            if (is_array($value)) {
-                $value = $this->resolvePropertyInstances($value, false);
-            }
+            $this->ensurePathIsTraversable($props, $key);
 
-            if ($unpackDotProps && str_contains($key, '.')) {
-                Arr::set($props, $key, $value);
-                unset($props[$key]);
-            } else {
-                $props[$key] = $value;
-            }
+            Arr::set($props, $key, $value);
+            unset($props[$key]);
         }
 
         return $props;
+    }
+
+    /**
+     * Resolve closures and Arrayable values along the intermediate segments of a
+     * dot-notation path so Arr::set can nest into them instead of overwriting an
+     * existing prop. Mirrors Inertia's own PropsResolver handling.
+     */
+    protected function ensurePathIsTraversable(array &$props, string $dotKey): void
+    {
+        $segments = explode('.', $dotKey);
+        array_pop($segments);
+
+        $current = &$props;
+
+        foreach ($segments as $segment) {
+            if (! isset($current[$segment])) {
+                return;
+            }
+
+            if ($current[$segment] instanceof Closure) {
+                $current[$segment] = app()->call($current[$segment]);
+            }
+
+            if ($current[$segment] instanceof Arrayable) {
+                $current[$segment] = $current[$segment]->toArray();
+            }
+
+            if (! is_array($current[$segment])) {
+                return;
+            }
+
+            $current = &$current[$segment];
+        }
+    }
+
+    protected function redirectURL(): string
+    {
+        if ($this->forceBase) {
+            return $this->resolveBaseURL();
+        }
+
+        if (request()->header('X-Inertia-Modal-Redirect')) {
+            return request()->header('X-Inertia-Modal-Redirect');
+        }
+
+        if (request()->header(Header::INERTIA) && request()->headers->get('referer')) {
+            return request()->headers->get('referer');
+        }
+
+        return $this->resolveBaseURL();
+    }
+
+    protected function resolveBaseURL(): string
+    {
+        if (! isset($this->baseURL)) {
+            throw new LogicException('Inertia modal responses must define a backdrop URL with baseURL() or baseRoute().');
+        }
+
+        return $this->baseURL;
     }
 
     public function toResponse($request)
