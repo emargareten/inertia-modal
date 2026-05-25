@@ -8,18 +8,25 @@
 Inertia Modal is a Laravel package that lets you implement backend-driven modal dialogs for Inertia apps. With this package, you can define modal routes on the backend and dynamically render them when you visit a dialog route.
 
 > [!NOTE]
-> This package supports Vue 3 only
+> This package supports Laravel 11+, PHP 8.2+, Inertia Laravel v3, and Vue 3 only.
 
 > [!NOTE]
 > Inertia Modal targets Inertia v3 and uses Inertia's built-in HTTP client. No separate Axios setup is required.
 
 ## Installation
 
-You can install the package via composer:
+Install the Laravel package with Composer:
 
 ```bash
 composer require emargareten/inertia-modal
 ```
+
+Install the frontend peer dependencies in your application if they are not already present:
+
+```bash
+npm install @inertiajs/vue3 vue
+```
+
 ## Frontend Setup
 
 ### `Modal` Component
@@ -46,40 +53,43 @@ import { Modal } from '../../vendor/emargareten/inertia-modal'
 
 ### Plugin
 
-Set up a `modal` plugin with the same component resolver you use to render Inertia pages.
+Set up the `modal` plugin with the same component resolver you use to render Inertia pages.
 
-#### Vite
+#### Vite / Laravel
 
 ```javascript
+import { createInertiaApp } from '@inertiajs/vue3'
+import { createApp, h } from 'vue'
 import { modal } from '../../vendor/emargareten/inertia-modal'
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
+
+const pages = import.meta.glob('./Pages/**/*.vue')
 
 createInertiaApp({
-  resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
+  resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, pages),
   setup({ el, App, props, plugin }) {
     createApp({ render: () => h(App, props) })
-      .use(modal, {
-        resolve: (name) => resolvePageComponent(name, import.meta.glob('./Pages/**/*.vue')),
-      })
       .use(plugin)
+      .use(modal, {
+        resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, pages),
+      })
       .mount(el)
   }
 })
 ```
 
-#### Laravel Mix
+If you prefer an alias, point it at the Composer-installed package:
 
 ```javascript
-import { modal } from '../../vendor/emargareten/inertia-modal'
+// vite.config.js
+import { defineConfig } from 'vite'
+import path from 'node:path'
 
-createInertiaApp({
-  resolve: (name) => import(`./Pages/${name}.vue`),
-  setup({ el, App, props, plugin }) {
-    createApp({ render: () => h(App, props) })
-      .use(modal, {
-        resolve: (name) => import(`./Pages/${name}.vue`),
-      })
-      .use(plugin)
-      .mount(el)
+export default defineConfig({
+  resolve: {
+    alias: {
+      'inertia-modal': path.resolve('vendor/emargareten/inertia-modal'),
+    },
   }
 })
 ```
@@ -113,9 +123,55 @@ class UserController extends Controller
 }
 ```
 
-By default, the backdrop component will be preserved with its current [stale] data (besides for the validation errors), in most cases this is fine since it
-will refresh when we close the modal (redirect to the base route), if your app does need fresh data for the backdrop, add
-the `refreshBackdrop` method:
+The component argument follows Inertia's component conventions, including configured component transformers and string-backed enums.
+
+Dot notation is supported for modal props:
+
+```php
+return Inertia::modal('Users/Show', [
+    'user' => $user,
+    'filters.search' => request('search'),
+])->baseRoute('users.index');
+```
+
+### Inertia v3 props
+
+Modal responses are resolved through Inertia's v3 response pipeline, so modal props can use the current Inertia prop helpers:
+
+```php
+return Inertia::modal('Users/Show', [
+    'user' => $user,
+    'stats' => Inertia::defer(fn () => $user->stats()),
+    'comments' => Inertia::merge($user->comments()->latest()->get())
+        ->append()
+        ->matchOn('id'),
+    'actions' => Inertia::once(fn () => ActionResource::collection($actions)),
+])->baseRoute('users.index');
+```
+
+This also preserves Inertia metadata such as shared props, deferred props, merge props, deep merge props, match-on strategies, once props, rescued props, and infinite scroll metadata when a modal opens over an existing page.
+
+Partial reloads for modal props are supported using the nested `modal.props.*` path. This is also what Inertia uses when loading deferred modal props:
+
+```javascript
+router.reload({ only: ['modal.props.stats'] })
+```
+
+Partial modal responses stay sparse so Inertia can apply `mergeProps`, `prependProps`, and `deepMergeProps` itself. For example, a deferred modal prop using `Inertia::merge(...)->append()` will be appended by Inertia's native client merge logic, not pre-merged by this package.
+
+If you need to exclude expensive shared props from modal-only responses, publish the config file and update `exclude_shared_props`:
+
+```bash
+php artisan vendor:publish --provider="Emargareten\InertiaModal\InertiaModalServiceProvider"
+```
+
+### Backdrop behavior
+
+By default, the backdrop page is preserved with its current data while the modal is open. This keeps modal visits fast and avoids reloading the page behind the dialog. When the modal is closed through `redirect()`, Inertia visits the base URL again.
+
+When a modal URL is opened directly, the configured base URL is dispatched through Laravel's normal router pipeline. Route middleware, model binding, route events, and response preparation run as they would for a normal request to the base page.
+
+If your backdrop needs fresh data while the modal opens, call `refreshBackdrop()`:
 
 ```php
     public function show(User $user): Modal
@@ -126,7 +182,7 @@ the `refreshBackdrop` method:
     }
 ```
 
-To force a specific route as the backdrop add the `forceBase` method:
+To ignore the current modal redirect header and force a specific base route as the backdrop, call `forceBase()`:
 
 ```php
     public function show(User $user): Modal
@@ -139,7 +195,7 @@ To force a specific route as the backdrop add the `forceBase` method:
 
 This will force re-render of the base route (or even redirect to a different base route).
 
-Both of the above methods can also accept a boolean whether to refresh etc.
+Both `refreshBackdrop()` and `forceBase()` accept a boolean.
 
 ### Frontend implementation
 
@@ -188,29 +244,8 @@ redirect({ preserveScroll: true })
 The `close` method will close the modal without redirecting to the base route.
 
 > [!NOTE]
-> For a more concise setup, consider configuring aliases instead of specifying the full path.
+> If you configured the Vite alias shown above, import from `inertia-modal` instead of the vendor path:
 >
-> Using vite:
-> ```js
-> // vite.config.js
-> export default defineConfig({
->   resolve: {
->     alias: {
->       'inertia-modal': path.resolve('vendor/emargareten/inertia-modal'),
->     },
->   },
-> });
-> ```
->
-> Using mix:
-> ```js
-> // webpack.mix.js
-> mix.alias({
->   'inertia-modal': path.resolve('vendor/emargareten/inertia-modal'),
-> });
-> ```
-> 
-> Now you can import the modules like this:
 > ```js
 > import { useModal } from 'inertia-modal'
 > ```
@@ -219,6 +254,7 @@ The `close` method will close the modal without redirecting to the base route.
 
 ```bash
 composer test
+npm run build
 ```
 
 ## Changelog

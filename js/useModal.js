@@ -1,9 +1,9 @@
 import { router, usePage } from '@inertiajs/vue3'
-import { defineAsyncComponent, h, nextTick, watch, computed, ref, shallowRef } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, ref, shallowRef, watch } from 'vue'
 import resolver from './resolver'
 
 const page = usePage()
-const modal = computed(() => page?.props?.modal);
+const modal = computed(() => page?.props?.modal)
 const props = computed(() => modal.value?.props)
 const key = computed(() => modal.value?.key)
 
@@ -14,6 +14,8 @@ const vnode = ref()
 
 if (typeof document !== 'undefined') {
   router.on('before', (event) => {
+    event.detail.visit.headers = event.detail.visit.headers || {}
+
     if (key.value) {
       event.detail.visit.headers['X-Inertia-Modal-Key'] = key.value
     }
@@ -37,7 +39,7 @@ const resolveComponent = () => {
     componentName.value = modal.value.component
 
     if (componentName.value) {
-      component.value = defineAsyncComponent(() => resolver.resolve(componentName.value))
+      component.value = defineAsyncComponent(() => resolver.resolveComponent(componentName.value))
     } else {
       component.value = false
     }
@@ -54,8 +56,8 @@ const resolveComponent = () => {
 }
 
 watch(modal, resolveComponent, {
-    deep: true,
-    immediate: true,
+  deep: true,
+  immediate: true,
 })
 
 /**
