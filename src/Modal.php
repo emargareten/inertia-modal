@@ -308,14 +308,21 @@ class Modal implements Responsable
      * frontend); generating a new key there avoids the new modal inheriting the
      * previous one's page metadata and Vue state. A full `modal` partial (e.g.
      * `only: ['modal']`) fetches a different modal instance, so it gets a new key.
+     * Validation responses keep the current key so the mounted modal form can
+     * receive Inertia's onError callback without being remounted.
      */
     protected function modalKey(): string
     {
-        if ($this->isSparseModalReload()) {
+        if ($this->isSparseModalReload() || $this->hasValidationErrors()) {
             return request()->header('X-Inertia-Modal-Key', (string) Str::uuid());
         }
 
         return (string) Str::uuid();
+    }
+
+    protected function hasValidationErrors(): bool
+    {
+        return request()->hasSession() && request()->session()->has('errors');
     }
 
     protected function isSparseModalReload(): bool
