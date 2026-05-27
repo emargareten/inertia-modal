@@ -2,6 +2,8 @@
 
 namespace Emargareten\InertiaModal\Tests;
 
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
 use LogicException;
@@ -292,6 +294,44 @@ class ModalTest extends TestCase
             ->assertSuccessful()
             ->assertJsonPath('props.modal.key', 'kept-key')
             ->assertJsonMissingPath('props.modal.props.comments');
+    }
+
+    public function test_modal_validation_response_preserves_the_key()
+    {
+        $post = Post::create(['content' => 'test content']);
+        $errors = (new ViewErrorBag)->put('default', new MessageBag([
+            'title' => ['The title field is required.'],
+        ]));
+
+        $this->withSession(['errors' => $errors])
+            ->get(route('posts.show', [$post]), [
+                'X-Inertia' => true,
+                'X-Inertia-Modal-Key' => 'kept-key',
+                'referer' => route('home'),
+            ])
+            ->assertSuccessful()
+            ->assertJsonPath('props.modal.key', 'kept-key')
+            ->assertJsonPath('props.errors.title', 'The title field is required.');
+    }
+
+    public function test_modal_validation_response_without_key_generates_a_key()
+    {
+        $post = Post::create(['content' => 'test content']);
+        $errors = (new ViewErrorBag)->put('default', new MessageBag([
+            'title' => ['The title field is required.'],
+        ]));
+
+        $key = $this->withSession(['errors' => $errors])
+            ->get(route('posts.show', [$post]), [
+                'X-Inertia' => true,
+                'referer' => route('home'),
+            ])
+            ->assertSuccessful()
+            ->assertJsonPath('props.errors.title', 'The title field is required.')
+            ->json('props.modal.key');
+
+        $this->assertIsString($key);
+        $this->assertNotSame('', $key);
     }
 
     public function test_partial_modal_response_preserves_history_encryption()
