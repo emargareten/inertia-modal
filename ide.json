@@ -12,6 +12,16 @@
             ]
         },
         {
+            "complete": "routeAction",
+            "condition": [
+                {
+                    "methodNames": ["baseAction"],
+                    "classFqn": ["\\Emargareten\\InertiaModal\\Modal"],
+                    "parameters": [1]
+                }
+            ]
+        },
+        {
             "complete": "inertiaPage",
             "condition": [
                 {

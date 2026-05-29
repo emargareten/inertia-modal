@@ -38,6 +38,7 @@ class TestCase extends Orchestra
                 Route::get('posts/{post}/with', [PostController::class, 'withProps'])->name('posts.with');
                 Route::get('posts/{post}/force-base', [PostController::class, 'forceBase'])->name('posts.force-base');
                 Route::get('posts/{post}/refresh', [PostController::class, 'refresh'])->name('posts.show.refresh');
+                Route::get('posts/{post}/action', [PostController::class, 'action'])->name('posts.show.action');
                 Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
             });
 

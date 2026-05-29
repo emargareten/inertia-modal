@@ -18,6 +18,11 @@ class PostController
         return Inertia::modal('Posts/Show', ['post' => $post])->baseRoute('posts.index');
     }
 
+    public function action(Post $post)
+    {
+        return Inertia::modal('Posts/Show', ['post' => $post])->baseAction([self::class, 'index']);
+    }
+
     public function refresh(Post $post)
     {
         return Inertia::modal('Posts/Show', ['post' => $post])

@@ -58,6 +58,16 @@ class Modal implements Responsable
     }
 
     /**
+     * Set the URL for the backdrop page using a route action.
+     */
+    public function baseAction(array|string $action, mixed $parameters = [], bool $absolute = true): static
+    {
+        $this->baseURL = action($action, $parameters, $absolute);
+
+        return $this;
+    }
+
+    /**
      * Force refreshing backdrop data.
      */
     public function refreshBackdrop(bool $refresh = true): static
@@ -433,7 +443,7 @@ class Modal implements Responsable
     protected function resolveBaseURL(): string
     {
         if (! isset($this->baseURL)) {
-            throw new LogicException('Inertia modal responses must define a backdrop URL with baseURL() or baseRoute().');
+            throw new LogicException('Inertia modal responses must define a backdrop URL with baseURL(), baseRoute(), or baseAction().');
         }
 
         return $this->baseURL;

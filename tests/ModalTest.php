@@ -97,6 +97,20 @@ class ModalTest extends TestCase
             });
     }
 
+    public function test_direct_modal_visit_can_use_a_base_action()
+    {
+        $post = Post::create(['content' => 'test content']);
+
+        $this->get(route('posts.show.action', [$post]))
+            ->assertSuccessful()
+            ->assertInertia(function (AssertableInertia $page) use ($post) {
+                $page->component('Posts/Index')
+                    ->where('modal.redirectURL', action([PostController::class, 'index']))
+                    ->where('modal.component', 'Posts/Show')
+                    ->where('modal.props.post.content', $post->content);
+            });
+    }
+
     public function test_modal_inertia_visit_resolves_shared_props()
     {
         $post = Post::create(['content' => 'test content']);
@@ -175,7 +189,7 @@ class ModalTest extends TestCase
     public function test_modal_requires_a_backdrop_url()
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('baseURL() or baseRoute()');
+        $this->expectExceptionMessage('baseURL(), baseRoute(), or baseAction()');
 
         Inertia::modal('Posts/Show')->toResponse(request());
     }
