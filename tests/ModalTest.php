@@ -35,6 +35,21 @@ class ModalTest extends TestCase
             });
     }
 
+    public function test_direct_modal_visit_preserves_the_modal_url()
+    {
+        $post = Post::create(['content' => 'test content']);
+
+        $this->get(route('posts.show', [$post], false).'?tab=comments')
+            ->assertSuccessful()
+            ->assertInertia(function (AssertableInertia $page) use ($post) {
+                $page->component('Posts/Index')
+                    ->url(route('posts.show', [$post], false).'?tab=comments')
+                    ->where('modal.redirectURL', route('posts.index'))
+                    ->where('modal.component', 'Posts/Show')
+                    ->where('modal.props.post.content', $post->content);
+            });
+    }
+
     public function test_direct_modal_visit_uses_inertia_component_transformer()
     {
         $post = Post::create(['content' => 'test content']);

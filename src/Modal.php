@@ -122,6 +122,8 @@ class Modal implements Responsable
         }
 
         $originalRequest = app('request');
+        $originalUrlResolver = $this->factorySetting(app(ResponseFactory::class), 'urlResolver');
+        $originalUrlResolver = $originalUrlResolver instanceof Closure ? $originalUrlResolver : null;
 
         $request = Request::create(
             $this->redirectURL(),
@@ -142,11 +144,13 @@ class Modal implements Responsable
             ->setLaravelSession($originalRequest->session());
 
         app()->instance('request', $request);
+        Inertia::resolveUrlUsing(fn () => $this->relativeUrl($originalRequest));
 
         try {
             return $router->dispatch($request);
         } finally {
             app()->instance('request', $originalRequest);
+            Inertia::resolveUrlUsing($originalUrlResolver);
         }
     }
 
@@ -364,6 +368,23 @@ class Modal implements Responsable
             array_map('trim', explode(',', (string) request()->header($header, ''))),
             fn (string $path) => $path !== ''
         ));
+    }
+
+    protected function relativeUrl(Request $request): string
+    {
+        $url = Str::start(Str::after($request->fullUrl(), $request->getSchemeAndHttpHost()), '/');
+        $rawUri = Str::before($request->getRequestUri(), '?');
+
+        return Str::endsWith($rawUri, '/') ? $this->finishUrlWithTrailingSlash($url) : $url;
+    }
+
+    protected function finishUrlWithTrailingSlash(string $url): string
+    {
+        $urlWithoutQueryWithTrailingSlash = Str::finish(Str::before($url, '?'), '/');
+
+        return str_contains($url, '?')
+            ? $urlWithoutQueryWithTrailingSlash.'?'.Str::after($url, '?')
+            : $urlWithoutQueryWithTrailingSlash;
     }
 
     protected function unpackDotProps(array $props): array
