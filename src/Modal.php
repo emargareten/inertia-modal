@@ -128,8 +128,8 @@ class Modal implements Responsable
         $request = Request::create(
             $this->redirectURL(),
             Request::METHOD_GET,
-            $originalRequest->query->all(),
-            $originalRequest->cookies->all(),
+            $this->backdropQuery($originalRequest),
+            $this->rawCookies($originalRequest),
             $originalRequest->files->all(),
             $originalRequest->server->all(),
             $originalRequest->getContent()
@@ -213,6 +213,38 @@ class Modal implements Responsable
             Inertia::getShared(),
             [],
         );
+    }
+
+    protected function backdropQuery(Request $request): array
+    {
+        $query = $request->query->all();
+
+        unset($query['modal']);
+
+        return $query;
+    }
+
+    protected function rawCookies(Request $request): array
+    {
+        $cookieHeader = (string) $request->server->get('HTTP_COOKIE', '');
+
+        if ($cookieHeader === '') {
+            return $request->cookies->all();
+        }
+
+        $cookies = [];
+
+        foreach (explode(';', $cookieHeader) as $cookie) {
+            $parts = explode('=', trim($cookie), 2);
+
+            if (count($parts) !== 2 || $parts[0] === '') {
+                continue;
+            }
+
+            $cookies[$parts[0]] = rawurldecode($parts[1]);
+        }
+
+        return $cookies;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Emargareten\InertiaModal\Tests;
 
 use Emargareten\InertiaModal\InertiaModalServiceProvider;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
@@ -23,14 +24,21 @@ class TestCase extends Orchestra
         View::addLocation(__DIR__);
         config()->set('inertia.testing.ensure_pages_exist', false);
         config()->set('inertia.pages.paths', [realpath(__DIR__)]);
+        config()->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
 
         Route::middleware([StartSession::class, Middleware::class, SubstituteBindings::class])
             ->group(function () {
                 Route::get('/', fn () => inertia()->render('Home'))->name('home');
                 Route::get('posts', [PostController::class, 'index'])->name('posts.index');
+                Route::get('posts-cookie-backdrop', [PostController::class, 'cookieBackdrop'])
+                    ->middleware(EncryptCookies::class)
+                    ->name('posts.cookie-backdrop');
                 Route::get('posts-with-middleware', [PostController::class, 'index'])
                     ->middleware(BaseMiddleware::class)
                     ->name('posts.middleware');
+                Route::get('posts/{post}/cookies', [PostController::class, 'cookies'])
+                    ->middleware(EncryptCookies::class)
+                    ->name('posts.show.cookies');
                 Route::get('posts/{post}/middleware', [PostController::class, 'middleware'])->name('posts.show.middleware');
                 Route::get('posts/{post}/features', [PostController::class, 'features'])->name('posts.features');
                 Route::get('posts/{post}/enum', [PostController::class, 'enum'])->name('posts.enum');

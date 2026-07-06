@@ -35,6 +35,23 @@ class PostController
         return Inertia::modal('Posts/Show', ['post' => $post])->baseRoute('posts.middleware');
     }
 
+    public function cookies(Post $post)
+    {
+        return Inertia::modal('Posts/Show', ['post' => $post])->baseRoute('posts.cookie-backdrop');
+    }
+
+    public function cookieBackdrop()
+    {
+        return Inertia::render('Posts/Index', [
+            'auth' => [
+                'user' => request()->cookie('modal_auth') === 'Taylor'
+                    ? ['name' => 'Taylor']
+                    : null,
+            ],
+            'has_modal_query' => request()->query->has('modal'),
+        ]);
+    }
+
     public function enum(Post $post)
     {
         return Inertia::modal(PostComponent::Show, ['post' => $post])->baseRoute('posts.index');

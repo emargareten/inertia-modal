@@ -2,6 +2,7 @@
 
 namespace Emargareten\InertiaModal\Tests;
 
+use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 use Inertia\Inertia;
@@ -107,6 +108,30 @@ class ModalTest extends TestCase
                 $page->component('Posts/Index')
                     ->where('from_base_middleware', true)
                     ->where('modal.redirectURL', route('posts.middleware'))
+                    ->where('modal.component', 'Posts/Show')
+                    ->where('modal.props.post.content', $post->content);
+            });
+    }
+
+    public function test_direct_modal_visit_uses_raw_cookies_for_the_backdrop_request()
+    {
+        $post = Post::create(['content' => 'test content']);
+        $cookie = encrypt(CookieValuePrefix::create('modal_auth', app('encrypter')->getKey()).'Taylor', false);
+
+        $this->call(
+            'GET',
+            route('posts.show.cookies', [$post], false).'?modal=1',
+            [],
+            ['modal_auth' => $cookie],
+            [],
+            ['HTTP_COOKIE' => 'modal_auth='.rawurlencode($cookie)]
+        )
+            ->assertSuccessful()
+            ->assertInertia(function (AssertableInertia $page) use ($post) {
+                $page->component('Posts/Index')
+                    ->where('auth.user.name', 'Taylor')
+                    ->where('has_modal_query', false)
+                    ->where('modal.redirectURL', route('posts.cookie-backdrop'))
                     ->where('modal.component', 'Posts/Show')
                     ->where('modal.props.post.content', $post->content);
             });
