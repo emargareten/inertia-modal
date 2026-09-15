@@ -128,6 +128,20 @@ test('partial new modal keeps deferred props after Inertia preserves current ini
   assert.ok(data.initialDeferredProps.default.includes('modal.props.stats'))
 })
 
+test('partial modal response does not restore completed deferred props', () => {
+  const currentPage = backdropPage({
+    deferredProps: { default: ['notifications'] },
+    initialDeferredProps: { default: ['notifications'] },
+  })
+
+  const data = applyBackdrop(currentPage, {
+    props: { notifications: [] },
+  })
+
+  assert.ok(!('deferredProps' in data))
+  assert.deepEqual(data.initialDeferredProps, { default: ['notifications'] })
+})
+
 test('partial modal response merges flash, full modal replaces it', () => {
   const currentPage = backdropPage({ flash: { message: 'old' } })
 

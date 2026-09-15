@@ -142,6 +142,19 @@ export function applyBackdrop(currentPage, data) {
     const current = currentPage[key]
     const incoming = data[key]
 
+    // A partial response has already resolved the deferred props it requested.
+    // Restoring the mounted page's metadata would make Inertia immediately
+    // request the same group again after applying the response.
+    if (partialModalResponse && key === 'deferredProps') {
+      if (incoming === undefined) {
+        delete data[key]
+      } else {
+        data[key] = clone(incoming)
+      }
+
+      continue
+    }
+
     if (current === undefined && incoming === undefined) {
       continue
     }
